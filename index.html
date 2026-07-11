@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Dress Up Game</title>
+    <title>3D Dress Up Game - Smooth Character</title>
     <style>
         * {
             margin: 0;
@@ -51,7 +51,7 @@
             background: #f9f9f9;
             padding: 20px;
             border-radius: 10px;
-            max-height: 400px;
+            max-height: 450px;
             overflow-y: auto;
         }
 
@@ -164,7 +164,7 @@
         <div class="game-area">
             <div class="title">
                 <h1>👗 3D Dress Up Game</h1>
-                <p>Pilih pakaian dan atur karakter Anda</p>
+                <p>Pilih pakaian untuk karakter Anda</p>
             </div>
             <canvas id="canvas"></canvas>
             <div class="info-text">
@@ -216,7 +216,7 @@
             </div>
 
             <div class="clothing-group">
-                <h4>🎨 Warna</h4>
+                <h4>🎨 Warna Baju</h4>
                 <div class="clothing-options">
                     <button class="clothing-btn active" data-type="color" data-style="red" style="background-color: #e74c3c; color: white;">Merah</button>
                     <button class="clothing-btn" data-type="color" data-style="blue" style="background-color: #3498db; color: white;">Biru</button>
@@ -234,7 +234,6 @@
     <script>
         let scene, camera, renderer;
         let character = {};
-        let clothingMeshes = {};
         let targetRotation = { x: 0, y: 0 };
         let currentRotation = { x: 0, y: 0 };
         let isDragging = false;
@@ -248,33 +247,6 @@
             pink: 0xf39c12
         };
 
-        const clothingConfig = {
-            top: {
-                shirt: { scale: 1, color: 0xe74c3c, name: 'Kemeja' },
-                tshirt: { scale: 0.9, color: 0x3498db, name: 'T-Shirt' },
-                tank: { scale: 0.8, color: 0x2ecc71, name: 'Tank Top' },
-                dress: { scale: 1.2, color: 0xf39c12, name: 'Dress' }
-            },
-            bottom: {
-                pants: { scale: 1, color: 0x34495e, name: 'Celana' },
-                skirt: { scale: 1.1, color: 0xe74c3c, name: 'Rok' },
-                shorts: { scale: 0.7, color: 0x3498db, name: 'Shorts' },
-                jeans: { scale: 1, color: 0x1a5276, name: 'Jeans' }
-            },
-            shoes: {
-                sneakers: { scale: 0.5, color: 0xffffff, name: 'Sneakers' },
-                heels: { scale: 0.5, color: 0x000000, name: 'Heels' },
-                boots: { scale: 0.6, color: 0x2c3e50, name: 'Boots' },
-                flats: { scale: 0.5, color: 0xf39c12, name: 'Flats' }
-            },
-            hair: {
-                long: { length: 2, color: 0x8b4513, name: 'Rambut Panjang' },
-                short: { length: 0.5, color: 0x8b4513, name: 'Rambut Pendek' },
-                curly: { length: 1.5, color: 0xa0522d, name: 'Rambut Keriting' },
-                bun: { length: 1, color: 0x8b4513, name: 'Bun' }
-            }
-        };
-
         function init() {
             // Scene setup
             scene = new THREE.Scene();
@@ -282,7 +254,7 @@
             
             // Camera setup
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.z = 3;
+            camera.position.z = 4;
             
             // Renderer setup
             const canvas = document.getElementById('canvas');
@@ -291,10 +263,10 @@
             renderer.shadowMap.enabled = true;
 
             // Lighting
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
             scene.add(ambientLight);
 
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9);
             directionalLight.position.set(5, 10, 7);
             directionalLight.castShadow = true;
             directionalLight.shadow.mapSize.width = 2048;
@@ -320,64 +292,121 @@
 
         function createCharacter() {
             const group = new THREE.Group();
+            character.group = group;
 
-            // Head
-            const headGeometry = new THREE.SphereGeometry(0.4, 32, 32);
-            const headMaterial = new THREE.MeshStandardMaterial({ color: 0xf4a460 });
-            const head = new THREE.Mesh(headGeometry, headMaterial);
-            head.position.y = 1.2;
-            head.castShadow = true;
-            group.add(head);
+            // Skin color
+            const skinColor = 0xf4a460;
 
-            // Body
-            const bodyGeometry = new THREE.ConeGeometry(0.35, 0.8, 32);
-            const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0xe74c3c });
-            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-            body.position.y = 0.5;
-            body.castShadow = true;
-            group.add(body);
+            // HEAD - Lebih rounded, tidak kotak
+            const headGeometry = new THREE.IcosahedronGeometry(0.45, 5);
+            const headMaterial = new THREE.MeshStandardMaterial({ 
+                color: skinColor,
+                roughness: 0.6,
+                metalness: 0.1
+            });
+            character.head = new THREE.Mesh(headGeometry, headMaterial);
+            character.head.position.y = 1.3;
+            character.head.castShadow = true;
+            group.add(character.head);
 
-            // Arms
+            // NECK
+            const neckGeometry = new THREE.CylinderGeometry(0.18, 0.2, 0.3, 16);
+            const neckMaterial = new THREE.MeshStandardMaterial({ 
+                color: skinColor,
+                roughness: 0.6,
+                metalness: 0.1
+            });
+            const neck = new THREE.Mesh(neckGeometry, neckMaterial);
+            neck.position.y = 0.95;
+            neck.castShadow = true;
+            group.add(neck);
+
+            // BODY - Smooth dan natural
+            character.bodyGroup = new THREE.Group();
+            character.bodyGroup.position.y = 0.35;
+
+            // Torso (badan atas)
+            const torsoGeometry = new THREE.CapsuleGeometry(0.3, 0.7, 4, 8);
+            character.bodyMesh = new THREE.Mesh(torsoGeometry);
+            character.bodyMesh.position.y = 0;
+            character.bodyMesh.castShadow = true;
+            character.bodyGroup.add(character.bodyMesh);
+
+            // Waist (pinggang)
+            const waistGeometry = new THREE.CapsuleGeometry(0.32, 0.2, 4, 8);
+            const waist = new THREE.Mesh(waistGeometry);
+            waist.position.y = -0.45;
+            waist.castShadow = true;
+            character.bodyGroup.add(waist);
+
+            group.add(character.bodyGroup);
+
+            // ARMS - Smooth cylinders
+            const armGeometry = new THREE.CapsuleGeometry(0.12, 0.9, 4, 8);
             for (let i = -1; i <= 1; i += 2) {
-                const armGeometry = new THREE.CylinderGeometry(0.1, 0.1, 0.8, 32);
-                const armMaterial = new THREE.MeshStandardMaterial({ color: 0xf4a460 });
-                const arm = new THREE.Mesh(armGeometry, armMaterial);
-                arm.position.set(i * 0.5, 0.8, 0);
+                const arm = new THREE.Mesh(armGeometry);
+                arm.position.set(i * 0.55, 0.5, 0);
+                arm.rotation.z = i > 0 ? 0.2 : -0.2;
                 arm.castShadow = true;
                 group.add(arm);
             }
 
-            // Legs
+            // HANDS
             for (let i = -1; i <= 1; i += 2) {
-                const legGeometry = new THREE.CylinderGeometry(0.1, 0.1, 0.8, 32);
-                const legMaterial = new THREE.MeshStandardMaterial({ color: 0x34495e });
-                const leg = new THREE.Mesh(legGeometry, legMaterial);
-                leg.position.set(i * 0.2, -0.3, 0);
+                const handGeometry = new THREE.SphereGeometry(0.13, 16, 16);
+                const hand = new THREE.Mesh(handGeometry);
+                hand.position.set(i * 0.55, -0.15, 0);
+                hand.castShadow = true;
+                group.add(hand);
+            }
+
+            // LEGS - Smooth cylinders
+            const legGeometry = new THREE.CapsuleGeometry(0.13, 1, 4, 8);
+            for (let i = -1; i <= 1; i += 2) {
+                const leg = new THREE.Mesh(legGeometry);
+                leg.position.set(i * 0.2, -0.7, 0);
                 leg.castShadow = true;
                 group.add(leg);
             }
 
-            // Hair
-            addHair(group, 'long');
-
-            // Shoes
+            // FEET - Smooth
+            character.shoes = [];
             for (let i = -1; i <= 1; i += 2) {
-                const shoeGeometry = new THREE.BoxGeometry(0.15, 0.1, 0.3);
-                const shoeMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
-                const shoe = new THREE.Mesh(shoeGeometry, shoeMaterial);
-                shoe.position.set(i * 0.2, -0.8, 0);
+                const shoeGeometry = new THREE.BoxGeometry(0.2, 0.15, 0.35, 8, 8, 8);
+                const shoe = new THREE.Mesh(shoeGeometry);
+                shoe.position.set(i * 0.2, -1.4, 0);
                 shoe.castShadow = true;
                 group.add(shoe);
-                clothingMeshes.shoes = shoe;
+                character.shoes.push(shoe);
             }
 
-            group.castShadow = true;
-            scene.add(group);
-            character.group = group;
-            character.head = head;
-            character.body = body;
+            // HAIR - Rounded
+            character.hair = createHair('long');
+            group.add(character.hair);
 
-            // Initialize default clothing
+            // Update all materials di bodyGroup
+            character.bodyGroup.children.forEach(child => {
+                if (child.material) {
+                    child.material = new THREE.MeshStandardMaterial({ 
+                        color: 0xe74c3c,
+                        roughness: 0.5,
+                        metalness: 0.1
+                    });
+                }
+            });
+
+            // Update shoes material
+            character.shoes.forEach(shoe => {
+                shoe.material = new THREE.MeshStandardMaterial({ 
+                    color: 0xffffff,
+                    roughness: 0.6,
+                    metalness: 0.2
+                });
+            });
+
+            scene.add(group);
+            
+            // Initialize state
             character.currentTop = 'shirt';
             character.currentBottom = 'pants';
             character.currentShoes = 'sneakers';
@@ -385,19 +414,62 @@
             character.currentColor = 'red';
         }
 
-        function addHair(group, style) {
-            if (clothingMeshes.hair) {
-                group.remove(clothingMeshes.hair);
+        function createHair(style) {
+            const hairGroup = new THREE.Group();
+
+            if (style === 'long') {
+                const hairGeometry = new THREE.IcosahedronGeometry(0.48, 4);
+                const hairMaterial = new THREE.MeshStandardMaterial({ 
+                    color: 0x8b4513,
+                    roughness: 0.7
+                });
+                const hair = new THREE.Mesh(hairGeometry, hairMaterial);
+                hair.scale.set(1, 1.3, 1);
+                hair.position.y = 0.15;
+                hair.castShadow = true;
+                hairGroup.add(hair);
+            } else if (style === 'short') {
+                const hairGeometry = new THREE.IcosahedronGeometry(0.46, 4);
+                const hairMaterial = new THREE.MeshStandardMaterial({ 
+                    color: 0x8b4513,
+                    roughness: 0.7
+                });
+                const hair = new THREE.Mesh(hairGeometry, hairMaterial);
+                hair.scale.set(1, 0.8, 1);
+                hair.position.y = 0.05;
+                hair.castShadow = true;
+                hairGroup.add(hair);
+            } else if (style === 'curly') {
+                const hairGeometry = new THREE.IcosahedronGeometry(0.5, 5);
+                const hairMaterial = new THREE.MeshStandardMaterial({ 
+                    color: 0xa0522d,
+                    roughness: 0.8
+                });
+                const hair = new THREE.Mesh(hairGeometry, hairMaterial);
+                hair.scale.set(1, 1.2, 1);
+                hair.position.y = 0.1;
+                hair.castShadow = true;
+                hairGroup.add(hair);
+            } else if (style === 'bun') {
+                const hairGeometry = new THREE.IcosahedronGeometry(0.43, 4);
+                const hairMaterial = new THREE.MeshStandardMaterial({ 
+                    color: 0x8b4513,
+                    roughness: 0.7
+                });
+                const hair = new THREE.Mesh(hairGeometry, hairMaterial);
+                hair.position.y = 0.35;
+                hair.castShadow = true;
+                hairGroup.add(hair);
+
+                // Bun ball
+                const bunGeometry = new THREE.SphereGeometry(0.25, 16, 16);
+                const bun = new THREE.Mesh(bunGeometry, hairMaterial);
+                bun.position.y = 0.6;
+                bun.castShadow = true;
+                hairGroup.add(bun);
             }
 
-            const hairGeometry = new THREE.SphereGeometry(0.42, 32, 32);
-            const hairMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
-            const hair = new THREE.Mesh(hairGeometry, hairMaterial);
-            hair.position.y = 1.3;
-            hair.scale.set(1, 1.2, 1);
-            hair.castShadow = true;
-            group.add(hair);
-            clothingMeshes.hair = hair;
+            return hairGroup;
         }
 
         function setupClothingButtons() {
@@ -407,43 +479,52 @@
                     const type = this.dataset.type;
                     const style = this.dataset.style;
 
-                    // Remove active class from siblings
+                    // Remove active class dari siblings
                     const siblings = document.querySelectorAll(`[data-type="${type}"]`);
                     siblings.forEach(btn => btn.classList.remove('active'));
                     this.classList.add('active');
 
-                    // Update character
                     if (type === 'color') {
                         character.currentColor = style;
-                        updateClothingColor(style);
+                        updateColor(style);
                     } else if (type === 'hair') {
                         character.currentHair = style;
-                        addHair(character.group, style);
+                        character.group.remove(character.hair);
+                        character.hair = createHair(style);
+                        character.group.add(character.hair);
                     } else if (type === 'top') {
                         character.currentTop = style;
-                        updateClothing();
                     } else if (type === 'bottom') {
                         character.currentBottom = style;
-                        updateClothing();
                     } else if (type === 'shoes') {
                         character.currentShoes = style;
-                        updateClothing();
+                        updateShoes(style);
                     }
                 });
             });
         }
 
-        function updateClothing() {
-            // Update body color based on current selections
-            const topConfig = clothingConfig.top[character.currentTop];
-            const bottomConfig = clothingConfig.bottom[character.currentBottom];
-
-            character.body.material.color.setHex(topConfig.color);
+        function updateColor(color) {
+            const hex = colorMap[color];
+            character.bodyMesh.material.color.setHex(hex);
+            character.bodyGroup.children.forEach(child => {
+                if (child.material && child !== character.bodyMesh) {
+                    child.material.color.setHex(hex);
+                }
+            });
         }
 
-        function updateClothingColor(color) {
-            const hex = colorMap[color];
-            character.body.material.color.setHex(hex);
+        function updateShoes(style) {
+            const shoeColors = {
+                sneakers: 0xffffff,
+                heels: 0x000000,
+                boots: 0x2c3e50,
+                flats: 0xf39c12
+            };
+
+            character.shoes.forEach(shoe => {
+                shoe.material.color.setHex(shoeColors[style] || 0xffffff);
+            });
         }
 
         function onMouseDown(e) {
@@ -470,7 +551,7 @@
         function onMouseWheel(e) {
             e.preventDefault();
             camera.position.z += e.deltaY * 0.005;
-            camera.position.z = Math.max(1.5, Math.min(5, camera.position.z));
+            camera.position.z = Math.max(2, Math.min(7, camera.position.z));
         }
 
         function onWindowResize() {
@@ -483,7 +564,6 @@
         }
 
         function resetCharacter() {
-            // Reset buttons
             document.querySelectorAll('.clothing-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
@@ -493,20 +573,22 @@
             document.querySelectorAll('[data-style="long"]').forEach(btn => btn.classList.add('active'));
             document.querySelectorAll('[data-style="red"]').forEach(btn => btn.classList.add('active'));
 
-            // Reset character
             character.currentTop = 'shirt';
             character.currentBottom = 'pants';
             character.currentShoes = 'sneakers';
             character.currentHair = 'long';
             character.currentColor = 'red';
-            updateClothing();
-            addHair(character.group, 'long');
+            
+            updateColor('red');
+            updateShoes('sneakers');
+            character.group.remove(character.hair);
+            character.hair = createHair('long');
+            character.group.add(character.hair);
         }
 
         function animate() {
             requestAnimationFrame(animate);
 
-            // Smooth rotation
             currentRotation.y += (targetRotation.y - currentRotation.y) * 0.1;
             currentRotation.x += (targetRotation.x - currentRotation.x) * 0.1;
 
@@ -518,7 +600,6 @@
             renderer.render(scene, camera);
         }
 
-        // Initialize on load
         window.addEventListener('load', init);
     </script>
 </body>
